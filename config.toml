@@ -1,0 +1,137 @@
+# =====================================================================
+#   OPS MONITOR  -  SETTINGS, LINKS & NOTAM SOURCES
+#
+#   This file is the shared template (it is in git).  Put PASSWORDS,
+#   real mail addresses and anything private in  config.local.toml
+#   (copy config.local.toml.example) - that file is never uploaded and
+#   its values override the ones here.
+#   After saving, restart the app (close the black window and
+#   double-click start.bat again).
+#
+#   Text values go inside "quotes".  Lines starting with # are notes.
+# =====================================================================
+
+[app]
+title = "Ops Monitor"
+team  = "Performance Engineering"
+host  = "0.0.0.0"        # 0.0.0.0 = reachable by other PCs on the LAN / VPN
+port  = 8080             # team opens  http://<office-pc-name>:8080
+
+[notam]
+expiring_days          = 7      # NOTAM turns RED when it expires within this many days
+new_badge_hours        = 24     # "NEW" badge shown for this many hours after it arrives
+archive_retention_days = 365    # cancelled / expired NOTAMs kept this long, then removed
+# Airports to monitor are managed in the app: NOTAM Monitor > "Airports" tab.
+
+
+# ---------------------------------------------------------------------
+#  SOURCE 1 : AAI AIM India (automatic, no login needed)
+#  Reads the monthly NOTAM summary PDFs for each FIR and series.
+# ---------------------------------------------------------------------
+[sources.aai]
+enabled         = true
+summary_page    = "https://aim-india.aai.aero/notam-summaries?field_airport_tid=All&field_series_value=All"
+firs            = ["Chennai", "Delhi", "Kolkata", "Mumbai"]
+series          = ["A", "C", "G"]
+check_every_min = 60
+
+
+# ---------------------------------------------------------------------
+#  SOURCE 2 : NOTAM e-mail / briefing feed   (FILL IN WHEN AVAILABLE)
+#  The app reads unread mails from this mailbox and picks NOTAMs out of
+#  the mail text and any .txt / .pdf attachments.
+#  method = "outlook" : read a folder of the Outlook app on this PC (no IT needed,
+#                       Outlook must stay open).  folder e.g. "Inbox/NOTAM"
+#           "graph"   : Microsoft 365 via Graph (fill in [graph] below)
+#           "smtp"    : plain IMAP login (blocked on most Microsoft 365 tenants)
+# ---------------------------------------------------------------------
+[sources.email]
+enabled         = false
+method          = "outlook"
+imap_host       = "outlook.office365.com"
+imap_port       = 993
+username        = ""            # IMAP / Graph mailbox, e.g. "notam.feed@example.com"
+password        = ""            # mailbox / app password
+folder          = "INBOX"
+from_filter     = []            # only read mails from these senders, e.g. ["nof@aai.aero"]
+subject_filter  = ""            # only mails whose subject contains this text, e.g. "NOTAM"
+default_fir     = ""            # used when a NOTAM has no Q) line, e.g. "VIDF"
+check_every_min = 5
+
+
+# ---------------------------------------------------------------------
+#  SOURCE 3 : Jeppesen JetPlan   (FILL IN WHEN AVAILABLE)
+#  Until direct access is confirmed, export / save NOTAM briefings from
+#  JetPlan as .txt or .pdf into the "drop folder" below - the app picks
+#  them up automatically.
+# ---------------------------------------------------------------------
+[sources.jetplan]
+enabled  = false
+url      = ""
+username = ""
+password = ""
+notes    = "Direct JetPlan connection to be added once access / Jeppesen terms are confirmed."
+
+
+# ---------------------------------------------------------------------
+#  SOURCE 4 : Drop folder (always on)
+#  Put any NOTAM file (.txt, .pdf, .eml) here: JetPlan exports, briefing
+#  packs, forwarded mails. It is read, then moved to data/processed.
+# ---------------------------------------------------------------------
+[sources.folder]
+enabled         = true
+path            = "data/inbox"
+check_every_min = 2
+
+
+# ---------------------------------------------------------------------
+#  E-MAIL ALERTS to the team   (FILL IN WHEN AVAILABLE)
+#  method = "outlook" : send from the Outlook app on this PC (no IT needed)
+#           "smtp"    : SMTP server, e.g. an internal relay from IT
+#                       (relay: port 25, use_tls = false, no username)
+#           "graph"   : Microsoft 365 via Graph (fill in [graph] below)
+#  Use the "Test mail" button on the NOTAM page to check the settings.
+# ---------------------------------------------------------------------
+[alerts.email]
+enabled    = false
+method     = "outlook"
+smtp_host  = "smtp.office365.com"
+smtp_port  = 587
+use_tls    = true
+username   = ""
+password   = ""
+from_addr  = ""                 # optional; shared mailbox to send from
+recipients = []                 # e.g. ["perf.team@example.com"]
+alert_on   = "critical"         # "critical" = performance-critical NOTAMs only,  "all" = every new NOTAM
+                                # (only for airports in the Airports list, when that list is set)
+
+
+# ---------------------------------------------------------------------
+#  MICROSOFT GRAPH (only for method = "graph").  IT registers an app in
+#  Entra ID with application permissions Mail.Send + Mail.ReadWrite
+#  (ideally limited to the alert / NOTAM mailboxes).
+# ---------------------------------------------------------------------
+[graph]
+tenant_id     = ""
+client_id     = ""
+client_secret = ""              # put this in config.local.toml
+
+
+# ---------------------------------------------------------------------
+#  OFFICE NETWORK.  Leave empty unless the internet goes through a proxy,
+#  e.g. "http://proxy.company.local:8080"
+# ---------------------------------------------------------------------
+[network]
+proxy = ""
+
+
+# ---------------------------------------------------------------------
+#  QUICK LINKS shown on the home page.  Add as many as you like:
+#  "Name shown" = "https://link"
+# ---------------------------------------------------------------------
+[links]
+"AAI AIM India"          = "https://aim-india.aai.aero/"
+"AAI NOTAM Summaries"    = "https://aim-india.aai.aero/notam-summaries"
+"AIP Supplements"        = "https://aim-india.aai.aero/aip-supplements"
+"eAIP India (current)"   = "https://aim-india.aai.aero/eaip/eaip-v2-10-2026/index-en-GB.html"
+"JetPlan"                = ""

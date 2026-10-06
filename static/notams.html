@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NOTAM Monitor</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="logo">✈</span>Ops Monitor</a>
+    <span class="crumb">/ NOTAM Monitor</span>
+    <span class="spacer"></span>
+    <a class="navlink" href="/">← Home</a>
+    <span class="userchip" id="userchip"></span>
+  </header>
+
+  <main>
+    <div class="counters" id="counters"></div>
+
+    <div class="tabs">
+      <div class="tab active" data-view="active">Active NOTAMs <span class="count" id="cntActive"></span></div>
+      <div class="tab" data-view="archive">Cancelled / Expired <span class="count" id="cntArchive"></span></div>
+      <div class="tab" data-view="airports">✈ Airports <span class="count" id="cntAirports"></span></div>
+    </div>
+
+    <!-- Airports tab -->
+    <div id="airportsView" hidden>
+      <div class="banner">Only NOTAMs for the airports in this list are shown on the NOTAM sheets. If the list is empty, all airports are shown.</div>
+      <div class="ap-bar">
+        <input type="text" class="icao" id="apIcao" maxlength="4" placeholder="ICAO e.g. VIDP">
+        <input type="text" class="apname" id="apName" placeholder="Name (optional)">
+        <button class="btn primary" id="apAdd">＋ Add airport</button>
+        <span class="spacer" style="flex:1"></span>
+        <input type="file" id="apFile" accept=".xlsx,.xlsm,.csv" hidden>
+        <button class="btn" id="apUpload">⬆ Upload Excel / CSV</button>
+        <button class="btn danger" id="apClear">Remove all</button>
+      </div>
+      <div class="sheet-wrap" style="min-height:200px">
+        <table class="aplist">
+          <thead><tr><th>ICAO</th><th>Name</th><th>Active NOTAMs</th><th>Added by</th><th>Added on</th><th></th></tr></thead>
+          <tbody id="apBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="noAirports" class="banner" hidden>No airports selected, so NOTAMs for <b>all</b> airports are shown. <a id="goAirports">Set up your airport list →</a></div>
+
+    <div class="toolbar" id="toolbar">
+      <input type="search" id="q" placeholder="Search NOTAM no., location, text, action…">
+      <select id="loc"><option value="">All locations</option></select>
+      <select id="st">
+        <option value="">All statuses</option>
+        <option value="unreviewed">New · not reviewed (white)</option>
+        <option value="pending">Action pending (yellow)</option>
+        <option value="done">Done (green)</option>
+        <option value="expiring">Expiring (red)</option>
+        <option value="new_only">Arrived in last 24 h</option>
+      </select>
+      <label class="chk"><input type="checkbox" id="crit"> Performance-critical only</label>
+      <span class="spacer"></span>
+      <button class="btn" id="btnFetch" title="Check all sources now">⟳ Check sources</button>
+      <button class="btn" id="btnTestMail" title="Send a test alert mail with the settings in config">✉ Test mail</button>
+      <button class="btn" id="btnPaste">＋ Add / paste NOTAM</button>
+      <button class="btn primary" id="btnExport">⬇ Export to Excel</button>
+    </div>
+
+    <div class="sources" id="sources"></div>
+
+    <div class="sheet-wrap" id="wrap">
+      <table class="sheet" id="sheet"><thead></thead><tbody></tbody></table>
+      <div class="more" id="more"></div>
+    </div>
+
+    <div class="legend" id="legend">
+      <span><i style="background:#fff;border:1px solid var(--line);border-left:3px solid #c3c9d2"></i>New / not reviewed</span>
+      <span><i style="background:var(--yellow-bg);border-left:3px solid var(--yellow)"></i>Action needed, not done yet</span>
+      <span><i style="background:var(--green-bg);border-left:3px solid var(--green)"></i>Action taken / no action needed / extended</span>
+      <span><i style="background:var(--red-bg);border-left:3px solid var(--red)"></i>Expiring within <b id="expD">7</b> days</span>
+      <span>Cancelled / expired NOTAMs move to the second tab automatically and are kept for <b id="retD">365</b> days.</span>
+    </div>
+  </main>
+
+  <!-- paste modal -->
+  <div class="overlay" id="pasteBox">
+    <div class="modal">
+      <h3>Add / paste NOTAMs</h3>
+      <p class="muted">Paste one or more NOTAMs in ICAO format, e.g. copied from JetPlan or an e-mail briefing. Several at once is fine.</p>
+      <textarea id="pasteText" placeholder="(A1234/26 NOTAMN
+Q) VIDF/QMRLC/IV/NBO/A/000/999/2834N07706E005
+A) VIDP B) 2610061200 C) 2610101800
+E) RWY 10/28 CLSD DUE WIP)"></textarea>
+      <div style="margin-top:8px"><input type="text" id="pasteFir" placeholder="FIR if no Q) line, e.g. VIDF" style="width:240px"></div>
+      <div class="row">
+        <button class="btn" data-close>Cancel</button>
+        <button class="btn primary" id="pasteGo">Add to sheet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- airports found in uploaded Excel -->
+  <div class="overlay" id="detectBox">
+    <div class="modal">
+      <h3>Airports found in <span id="detectFile"></span></h3>
+      <p class="muted">Untick anything that is not an airport, then click Add.</p>
+      <label class="chk" style="display:flex;gap:6px;margin-bottom:8px"><input type="checkbox" id="detectAll" checked> Select all</label>
+      <div class="detect-list" id="detectList"></div>
+      <div class="row">
+        <button class="btn" data-close>Cancel</button>
+        <button class="btn primary" id="detectGo">Add selected</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- detail modal -->
+  <div class="overlay" id="detailBox">
+    <div class="modal" id="detail"></div>
+  </div>
+
+  <script src="/static/common.js"></script>
+  <script src="/static/notams.js"></script>
+</body>
+</html>

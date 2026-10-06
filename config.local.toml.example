@@ -1,0 +1,25 @@
+# Copy this file to  config.local.toml  on the PC that runs the app.
+# config.local.toml is NOT uploaded to GitHub. Anything you put here
+# overrides config.toml. Only include the lines you need.
+
+# [alerts.email]
+# enabled    = true
+# method     = "outlook"            # "outlook" / "smtp" / "graph"
+# recipients = ["perf.team@yourcompany.com"]
+
+# [sources.email]
+# enabled     = true
+# method      = "outlook"
+# folder      = "Inbox/NOTAM"
+# from_filter = ["nof@aai.aero"]
+
+# [graph]
+# tenant_id     = ""
+# client_id     = ""
+# client_secret = ""
+
+# [network]
+# proxy = "http://proxy.yourcompany.local:8080"
+
+# [links]
+# "JetPlan" = "https://..."

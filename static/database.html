@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Database Monitor</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="logo">✈</span>Ops Monitor</a>
+    <span class="crumb">/ Database Monitor</span>
+    <span class="spacer"></span>
+    <a class="navlink" href="/">← Home</a>
+    <span class="userchip" id="userchip"></span>
+  </header>
+  <main>
+    <div class="panel">
+      <h3>Database Monitor: next phase</h3>
+      <p>This module will compare, for each SpiceJet airport:</p>
+      <ul>
+        <li><b>AAI eAIP</b>: AD 2.12 runway characteristics, AD 2.13 declared distances, AD 2.10 obstacles (checked every AIRAC)</li>
+        <li><b>Jeppesen / JetPlan</b>: same fields, once access is set up</li>
+        <li><b>Our internal Excel database</b>: runway / airport and obstacle data</li>
+      </ul>
+      <p>Every difference will be listed with the same colour system (yellow = to review, green = actioned) and e-mailed to the team.</p>
+      <p class="muted">Needed to start: a sample of the internal Excel sheet and the list of airports.</p>
+    </div>
+  </main>
+  <script src="/static/common.js"></script>
+  <script>initTopbar();</script>
+</body>
+</html>

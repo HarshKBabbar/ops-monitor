@@ -1,0 +1,8 @@
+fastapi>=0.110
+uvicorn>=0.29
+requests>=2.31
+beautifulsoup4>=4.12
+pypdf>=4.0
+openpyxl>=3.1
+truststore>=0.9
+pywin32>=306; sys_platform == "win32"

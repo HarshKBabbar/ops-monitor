@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ops Monitor</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="logo">✈</span><span id="title">Ops Monitor</span></a>
+    <span class="crumb" id="team"></span>
+    <span class="spacer"></span>
+    <span class="userchip" id="userchip"></span>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>Welcome</h1>
+      <p>Choose a module to continue.</p>
+    </div>
+
+    <div class="modules">
+      <a class="module" href="/notams">
+        <div class="icon">📋</div>
+        <h2>NOTAM Monitor</h2>
+        <p>All NOTAMs from AAI AIM, e-mail feed and JetPlan in one sheet. Review, record actions and track expiries.</p>
+        <div class="stats" id="notamStats"><span class="pill">Loading…</span></div>
+      </a>
+      <a class="module disabled" href="/database">
+        <div class="icon">🗄️</div>
+        <h2>Database Monitor</h2>
+        <p>Compare AIP, Jeppesen and our airport / runway / obstacle database and flag every difference.</p>
+        <div class="stats"><span class="pill">Coming in next phase</span></div>
+      </a>
+    </div>
+
+    <div class="panel">
+      <h3>NOTAM sources</h3>
+      <div class="sources" id="sources"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Quick links</h3>
+      <div class="links" id="links"></div>
+      <p class="muted" style="margin:10px 0 0">Add or change links in <b>config.toml</b> (section <b>[links]</b>).</p>
+    </div>
+  </main>
+
+  <script src="/static/common.js"></script>
+  <script>
+    initTopbar();
+    (async () => {
+      const cfg = await api("/api/config");
+      document.getElementById("title").textContent = cfg.title;
+      document.getElementById("team").textContent = cfg.team;
+      document.getElementById("links").innerHTML = Object.entries(cfg.links).map(([k, v]) =>
+        v ? `<a href="${esc(v)}" target="_blank" rel="noopener">${esc(k)} ↗</a>` : `<span title="Add the link in config.toml">${esc(k)} (not set)</span>`).join("");
+
+      const rows = await api("/api/notams");
+      const c = s => rows.filter(r => r.status === s).length;
+      document.getElementById("notamStats").innerHTML =
+        `<span class="pill">${rows.length} active</span>
+         <span class="pill yellow">${c("new") + c("pending")} to review</span>
+         <span class="pill green">${c("done")} done</span>
+         <span class="pill red">${c("expiring")} expiring</span>`;
+
+      const src = await api("/api/sources");
+      document.getElementById("sources").innerHTML = src.map(s => {
+        const cls = !s.enabled ? "off" : s.ok === 1 ? "ok" : s.ok === 0 ? "err" : "";
+        const txt = !s.enabled ? "not set up (config.toml)" : `${ago(s.last_run)} · ${s.message || "waiting for first run"}`;
+        return `<span class="src"><span class="dot ${cls}"></span><b>${esc(s.name)}</b> ${esc(txt)}</span>`;
+      }).join("");
+    })();
+  </script>
+</body>
+</html>

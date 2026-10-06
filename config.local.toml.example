@@ -1,25 +1,56 @@
-# Copy this file to  config.local.toml  on the PC that runs the app.
-# config.local.toml is NOT uploaded to GitHub. Anything you put here
-# overrides config.toml. Only include the lines you need.
+# =====================================================================
+#  Copy this file to  config.local.toml  (next to config.toml and start.bat).
+#  OPS MONITOR - this office PC's own settings
+#  Put this file next to config.toml and start.bat.
+#  It is never uploaded to GitHub. Restart start.bat after editing,
+#  then press "Test mail" on the NOTAM page.
+#
+#  Do NOT add a second [alerts.email] line - there must be only one.
+#  To switch how mail is sent, change only the  method  line.
+# =====================================================================
 
-# [alerts.email]
-# enabled    = true
-# method     = "outlook"            # "outlook" / "smtp" / "graph"
-# recipients = ["perf.team@yourcompany.com"]
 
-# [sources.email]
-# enabled     = true
-# method      = "outlook"
-# folder      = "Inbox/NOTAM"
-# from_filter = ["nof@aai.aero"]
+# ---------------------------------------------------------------------
+#  ALERT MAILS
+#
+#  method = "outlook" : send from Outlook on this PC (Outlook must be open).
+#                       Only "recipients" below is needed.
+#  method = "smtp"    : send through a mail server: IT's relay, or Gmail.
+#                       Fill in the smtp_ / username / password lines.
+# ---------------------------------------------------------------------
+[alerts.email]
+enabled    = true
+method     = "outlook"                          # "outlook" or "smtp"
+recipients = ["perf.team@yourcompany.com"]      # <-- who gets the alerts
+alert_on   = "critical"                         # "critical" or "all"
 
-# [graph]
-# tenant_id     = ""
-# client_id     = ""
-# client_secret = ""
+# --- only used when method = "smtp" ---
+#   IT relay:  smtp_host = address from IT, smtp_port = 25,  use_tls = false, username/password empty
+#   Gmail:     smtp_host = "smtp.gmail.com", smtp_port = 587, use_tls = true,
+#              username = your Gmail, password = 16-letter "App password"
+smtp_host  = "relay.yourcompany.com"
+smtp_port  = 25
+use_tls    = false
+username   = ""
+password   = ""
+from_addr  = ""                                 # sender address, e.g. "ops-monitor@yourcompany.com"
 
-# [network]
-# proxy = "http://proxy.yourcompany.local:8080"
 
-# [links]
-# "JetPlan" = "https://..."
+# ---------------------------------------------------------------------
+#  NOTAM E-MAIL FEED (optional): read NOTAM mails into the sheet.
+#  With Outlook: make an Outlook rule that moves NOTAM mails to a
+#  folder "NOTAM" under the Inbox, then set enabled = true.
+# ---------------------------------------------------------------------
+[sources.email]
+enabled     = false
+method      = "outlook"
+folder      = "Inbox/NOTAM"
+from_filter = []                                # e.g. ["nof@aai.aero"]
+default_fir = ""                                # e.g. "VIDF"
+
+
+# ---------------------------------------------------------------------
+#  OFFICE PROXY (only if the AAI source shows an error at the office)
+# ---------------------------------------------------------------------
+[network]
+proxy = ""                                      # e.g. "http://proxy.yourcompany.com:8080"
